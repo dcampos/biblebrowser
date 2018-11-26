@@ -14,7 +14,7 @@ class SwordApp(object):
 
     def __init__(self):
         self.builder = Gtk.Builder()
-        self.builder.add_from_file('main-form.glade')
+        self.builder.add_from_file('biblebrowser.glade')
 
         self.form1 = self.builder.get_object('swordWindow')
         self.form1.connect('destroy', Gtk.main_quit)
@@ -27,7 +27,7 @@ class SwordApp(object):
 
         for k in canons['kjv']:
             for b in canons['kjv'][k]:
-                self.book_store.append([b[0]])
+                self.book_store.append([b[0], b[1]])
 
         self.book_name = self.book_store[0][0]
         self.chapter_number = 1
@@ -80,13 +80,27 @@ class SwordApp(object):
             if found_modules[module]['moddrv'] in ('zText', 'RawText'):
                 self.version_store.append([found_modules[module]['description'], module])
 
-    def set_book(self, active=0):
-        self.book_name = self.book_store[active][0]
+    def book_completed(self, widget, model, iterr, data=None):
+        book_name = model.get_value(iterr, 0)
+        self.book_name = book_name
+        self.set_book()
+
+    def book_entered(self, widget, event=None, data=None):
+        book_name = widget.get_text()
+        for item in self.book_store:
+            print('testing', item[0])
+            if item[0].lower() == book_name.lower():
+                self.book_name = item[0]
+                self.set_book()
+        widget.set_text(self.book_name)
+
+    def set_book(self):
         self.book = self.current_view.get_bible().get_structure().find_book(self.book_name)[1]
         num_chapters = self.book.num_chapters
         self.chapter_ad.set_upper(num_chapters)
         self.chapter_number = min(self.chapter_number, num_chapters)
         self.chapter_spin.set_value(self.chapter_number)
+        self.current_view.set_passage()
 
     def set_chapter(self, active=0):
         num_verses = self.book.chapter_lengths[active]
@@ -108,8 +122,9 @@ class SwordApp(object):
 
     def book_combo_changed(self, widget, data=None):
         active = widget.get_active()
-        self.set_book(active)
-        self.current_view.set_passage()
+        if active >= 0:
+            self.book_name = self.book_store[active][0]
+            self.set_book()
 
     def chapter_spin_changed(self, widget):
         self.chapter_number = int(widget.get_value())
