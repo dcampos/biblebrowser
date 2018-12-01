@@ -4,6 +4,8 @@ Bible Browser is a tiny Python Gtk3 application for easily reading multiple Bibl
 
 ## Features
 
+![Bible Browser Screenshot](biblebrowser.png)
+
 * Lookup by book, chapter and verse
 * Normal and parallel views
 * Highlight current verse
