@@ -4,15 +4,14 @@ import gi
 
 gi.require_version('Gtk', '3.0')
 
-from gi.repository import Gtk, Pango, GLib
+from gi.repository import Gtk, Pango, Gio
 from pysword.canons import canons
 from pysword.modules import SwordModules
-
-import pprint
 
 class SwordApp(object):
 
     def __init__(self):
+        self.settings = Gio.Settings('org.biblebrowser')
         self.builder = Gtk.Builder()
         self.builder.add_from_file('biblebrowser.glade')
 
@@ -20,6 +19,8 @@ class SwordApp(object):
         self.form1.connect('destroy', Gtk.main_quit)
 
         self.version_store = self.builder.get_object('versionStore')
+
+        self.def_version = self.settings.get_string('def-module')
 
         self.load_modules()
 
@@ -62,8 +63,6 @@ class SwordApp(object):
 
         self.builder.connect_signals(self)
 
-        self.normal_view.set_version()
-        self.parallel_view.set_version()
         self.set_book()
         self.normal_view.set_passage()
         self.parallel_view.set_passage()
@@ -88,7 +87,6 @@ class SwordApp(object):
     def book_entered(self, widget, event=None, data=None):
         book_name = widget.get_text()
         for item in self.book_store:
-            print('testing', item[0])
             if item[0].lower() == book_name.lower():
                 self.book_name = item[0]
                 self.set_book()
@@ -137,7 +135,6 @@ class SwordApp(object):
         self.current_view.scroll_to_current_verse()
 
     def stack_changed(self, widget, data=None):
-        print('stack changed', data)
         if self.current_view == self.normal_view:
             self.current_view = self.parallel_view
         else:
@@ -153,18 +150,33 @@ class VersionView(object):
         self.version_combo = version_combo
 
         self.tag = self.bible_buffer.create_tag('normal', scale=1.2)
-        self.bold_tag = self.bible_buffer.create_tag('bold', scale=0.9, weight=Pango.Weight.BOLD)
+        self.number = self.bible_buffer.create_tag('number', scale=0.8, rise=5000, foreground='orange')
         self.italic_tag = self.bible_buffer.create_tag('italic', style=Pango.Style.ITALIC)
         self.underline_tag = self.bible_buffer.create_tag('underline', underline=Pango.Underline.SINGLE)
 
         self.version_combo.connect('changed', self.version_combo_changed)
-        self.version_combo.set_active(0)
+
+        if (self.app.def_version):
+            self.set_version_by_name(self.app.def_version)
+        else:
+            self.version_combo.set_active(0)
+
+        self.set_version()
+
+    def set_version_by_name(self, name):
+        for version in self.app.version_store:
+            if version[1] == name:
+                active = self.app.version_store.get_path(version.iter)[0]
+                self.version_combo.set_active(active)
+                self.set_version()
 
     def get_bible(self):
         return self.bible
 
-    def set_version(self, active=0):
+    def set_version(self):
+        active = self.version_combo.get_active()
         self.bible = self.app.modules.get_bible_from_module(self.app.version_store[active][1])
+        self.app.settings.set_string('def-module', self.app.version_store[active][1])
 
     def set_passage(self):
         iter = self.bible.get_iter(books=[self.app.book_name], chapters=[self.app.chapter_number])
@@ -172,7 +184,7 @@ class VersionView(object):
         try:
             for i, verse in enumerate(iter):
                 end_iter = self.bible_buffer.get_end_iter()
-                self.bible_buffer.insert_with_tags(end_iter, str(i+1), self.bold_tag)
+                self.bible_buffer.insert_with_tags(end_iter, str(i+1), self.number)
                 end_iter = self.bible_buffer.get_end_iter()
                 self.bible_buffer.insert(end_iter, ' ')
                 end_iter = self.bible_buffer.get_end_iter()
@@ -192,8 +204,7 @@ class VersionView(object):
         self.bible_view.scroll_to_iter(scroll_iter, 0.0, True, 0.5, 0.5)
 
     def version_combo_changed(self, widget):
-        active = widget.get_active()
-        self.set_version(active)
+        self.set_version()
         self.set_passage()
 
 class ParallelView(VersionView):
@@ -205,9 +216,9 @@ class ParallelView(VersionView):
     def get_bible(self):
         return self.left_version.get_bible()
 
-    def set_version(self, active=0):
-        self.left_version.set_version(active)
-        self.right_version.set_version(active)
+    def set_version(self):
+        self.left_version.set_version()
+        self.right_version.set_version()
 
     def set_passage(self):
         self.left_version.set_passage()

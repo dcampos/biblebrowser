@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<schemalist>
+  <schema id="org.biblebrowser" path="/org/biblebrowser/">
+    <key type="s" name="def-module">
+      <default>""</default>
+      <summary></summary>
+      <description></description>
+    </key>
+  </schema>
+</schemalist>
