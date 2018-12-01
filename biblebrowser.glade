@@ -285,7 +285,6 @@
                         <property name="wrap_mode">word</property>
                         <property name="left_margin">6</property>
                         <property name="right_margin">6</property>
-                        <signal name="move-cursor" handler="cursor_moved" swapped="no"/>
                       </object>
                     </child>
                   </object>
