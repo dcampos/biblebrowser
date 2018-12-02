@@ -1,0 +1,17 @@
+#!/usr/bin/env python3
+
+import sys
+import gi
+
+pkgdatadir = '@pkgdatadir@'
+
+sys.path.insert(1, pkgdatadir)
+
+if __name__ == '__main__':
+    from gi.repository import Gio
+    from biblebrowser.biblebrowser import SwordApp
+    resource = Gio.resource_load(pkgdatadir + "/biblebrowser.gresource")
+    Gio.Resource._register(resource)
+    gui = SwordApp()
+    gui.main()
+ 

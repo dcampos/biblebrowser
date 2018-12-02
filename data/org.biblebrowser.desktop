@@ -1,0 +1,9 @@
+[Desktop Entry]
+Name=Bible Browser
+Comment=Bible Browser
+Exec=bible-browser
+Type=Application
+Icon=org.biblebrowser
+Categories=Education;
+Terminal=false
+StartupNotify=true

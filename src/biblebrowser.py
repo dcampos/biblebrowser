@@ -1,5 +1,3 @@
-#!/usr/bin/env python3
-
 import gi
 
 gi.require_version('Gtk', '3.0')
@@ -13,7 +11,7 @@ class SwordApp(object):
     def __init__(self):
         self.settings = Gio.Settings('org.biblebrowser')
         self.builder = Gtk.Builder()
-        self.builder.add_from_file('biblebrowser.glade')
+        self.builder.add_from_resource('/org/biblebrowser/biblebrowser.glade')
 
         self.form1 = self.builder.get_object('swordWindow')
         self.form1.connect('destroy', Gtk.main_quit)
@@ -141,6 +139,12 @@ class SwordApp(object):
             self.current_view = self.normal_view
         self.current_view.set_passage()
 
+    def main(self):
+        try:
+            Gtk.main()
+        except KeyboardInterrupt:
+            pass
+
 class VersionView(object):
 
     def __init__(self, app, bible_view, version_combo):
@@ -233,9 +237,6 @@ class ParallelView(VersionView):
         self.right_version.scroll_to_current_verse()
 
 if __name__ == '__main__':
-    try:
-        gui = SwordApp()
-        Gtk.main()
-    except KeyboardInterrupt:
-        pass
+    gui = SwordApp()
+    gui.main()
 
